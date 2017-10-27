@@ -1,4 +1,4 @@
-#!/reg/common/package/python/2.5.5/bin/python
+#!/usr/bin/env python
 # Scott Stubbs - code to allow pnCCD encoders to turn on and off automatically.
 # Based on SXR scanning scripts by A. Mitra et al.
 
@@ -62,13 +62,17 @@ if __name__ == '__main__':
  
   try:
     "SETTING TWEAK PV"
-    if options.opts['move_positive']) is 1:
+    if options.opts['move_positive'] == 1:
+        if options.opts['move_negative'] == 1:
+            sys.exit("Check options, can only move motor in one direction!")
 	print "Positive tweak"
     	motorpv = Pv(motorpvname + '.TWK_POS')
-    else if options.opts['move_negative']) is 1:
+    elif options.opts['move_negative'] == 1:
 	print "Negative tweak"
     	motorpv = Pv(motorpvname + '.TWK_NEG')
     else:
+        sys.exit("Check options, nothing to move!")
+# Connect motor, dmov and encoder PVs
     motorpv.connect(1.0)
     dmovpv = donemoving(motorpvname + '.DMOV')
     dmovpv.connect(1.0)
