@@ -88,7 +88,9 @@ if __name__ == '__main__':
     encoderpv.put('0', 2.0)
 # Verify
     if encoderpv.get(2.0) == 0:
-        print "encoder off!"
+        print "Encoder off!"
+    else:
+        print "Encoder may not be off. Try manually."
 # Cleanup
     dmovpv.disconnect()
     motorpv.disconnect()
