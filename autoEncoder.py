@@ -50,14 +50,14 @@ class donemoving(Pv):
       print e
 
 if __name__ == '__main__':
-  options = Options(['motorpvname', 'encoderpv', 'move_positive', 'move_negative'])
+  options = Options(['motor', 'encoder', 'move_positive', 'move_negative'])
   try:
     options.parse()
   except Exception, msg:
     options.usage(str(msg))
     sys.exit()
 
-  motorpvname = options.motorpvname
+  motor_prefix = options.motor
   evtmask = pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM 
  
   try:
@@ -66,15 +66,15 @@ if __name__ == '__main__':
         if options.opts['move_negative'] == 1:
             sys.exit("Check options, can only move motor in one direction!")
 	print "Positive tweak"
-    	motorpv = Pv(motorpvname + '.TWK_POS')
+    	motorpv = Pv(motor_prefix + '.TWK_POS')
     elif options.opts['move_negative'] == 1:
 	print "Negative tweak"
-    	motorpv = Pv(motorpvname + '.TWK_NEG')
+    	motorpv = Pv(motor_prefix + '.TWK_NEG')
     else:
         sys.exit("Check options, nothing to move!")
 # Connect motor, dmov and encoder PVs
     motorpv.connect(1.0)
-    dmovpv = donemoving(motorpvname + '.DMOV')
+    dmovpv = donemoving(motor_prefix + '.DMOV')
     dmovpv.connect(1.0)
     dmovpv.monitor(evtmask, ctrl=False)
     encoderpv.connect(1.0)
