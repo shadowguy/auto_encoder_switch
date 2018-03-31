@@ -58,6 +58,7 @@ if __name__ == '__main__':
     sys.exit()
 
   motor_prefix = options.motor
+  encoderpv = Pv(options.encoder)
   evtmask = pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM 
  
   try:
@@ -72,8 +73,10 @@ if __name__ == '__main__':
     	motorpv = Pv(motor_prefix + '.TWK_NEG')
     else:
         sys.exit("Check options, nothing to move!")
-# Connect motor, dmov and encoder PVs
+# Connect motor, proc, dmov and encoder PVs
     motorpv.connect(1.0)
+    motor_statpv = Pv(motor_prefix + ':UPDATE_STATUS.PROC')
+    motor_statpv.connect
     dmovpv = donemoving(motor_prefix + '.DMOV')
     dmovpv.connect(1.0)
     dmovpv.monitor(evtmask, ctrl=False)
