@@ -10,7 +10,7 @@ import time
 import random
 import threading
 
-from options import Options
+import argparse
 
 class donemoving(Pv):
   def __init__(self, name):
@@ -50,33 +50,33 @@ class donemoving(Pv):
       print e
 
 if __name__ == '__main__':
-  options = Options(['motor', 'encoder', 'move_positive', 'move_negative'])
+  parser = argparse.ArgumentParser(description='pnCCD encoder automation, will turn encoder on, move motor in specified direction and turn back off again')
+  parser.add_argument('motor', metavar='motor', help='PV of motor name')
+  parser.add_argument('encoder', metavar='encoder', help='PV of encoder')
+  parser.add_argument('move_direction', metavar='move_direction', help='+ for positive move, - for negative')
   try:
-    options.parse()
-  except Exception, msg:
-    options.usage(str(msg))
-    sys.exit()
+      args=parser.parse_args()
+  except:
+     sys.exit("Check arguments!")  #Likely no arguments passed in
 
-  motor_prefix = options.motor
-  encoderpv = Pv(options.encoder)
+  motor_prefix = args.motor
+  encoderpv = Pv(args.encoder)
   evtmask = pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM 
- 
+  print args
   try:
     "SETTING TWEAK PV"
-    if options.opts['move_positive'] == 1:
-        if options.opts['move_negative'] == 1:
-            sys.exit("Check options, can only move motor in one direction!")
+    if args.move_direction == '+':
 	print "Positive tweak"
-    	motorpv = Pv(motor_prefix + '.TWK_POS')
-    elif options.opts['move_negative'] == 1:
+    	motorpv = Pv(motor_prefix + '.TWF')
+    elif args.move_direction == '-':
 	print "Negative tweak"
-    	motorpv = Pv(motor_prefix + '.TWK_NEG')
+    	motorpv = Pv(motor_prefix + '.TWR')
     else:
-        sys.exit("Check options, nothing to move!")
-# Connect motor, proc, dmov and encoder PVs
+        sys.exit("Check options, no direction found!")
+# Connect motor, proc, dmov and encoder PVs - proc needed to tell IOC encoder is on
     motorpv.connect(1.0)
     motor_statpv = Pv(motor_prefix + ':UPDATE_STATUS.PROC')
-    motor_statpv.connect
+    motor_statpv.connect(1.0)
     dmovpv = donemoving(motor_prefix + '.DMOV')
     dmovpv.connect(1.0)
     dmovpv.monitor(evtmask, ctrl=False)
@@ -84,14 +84,18 @@ if __name__ == '__main__':
     pyca.flush_io()
 #  Put to encoder PV to turn it on, wait briefly
     encoderpv.put('1', 2.0)
-    self.__sem.wait(50)
+    time.sleep(0.5)
+#  Tell IOC to update status
+    motor_statpv.put(1, 2.0)
+    time.sleep(0.5)
 #  Put to motor tweak PV
-    motorpv.put('1', 2.0)
+    motorpv.put(1, 2.0)
     dmovpv.wait_for_done()
 #  Once motor is done moving, turn encoder back off!
     encoderpv.put('0', 2.0)
 # Verify
-    if encoderpv.get(2.0) == 0:
+    encoderpv.get(False, 1.0) # Don't need control values
+    if encoderpv.value == 0:
         print "Encoder off!"
     else:
         print "Encoder may not be off. Try manually."
@@ -99,6 +103,7 @@ if __name__ == '__main__':
     dmovpv.disconnect()
     motorpv.disconnect()
     encoderpv.disconnect()
+    motor_statpv.disconnect()
 
   except pyca.pyexc, e:
       print 'pyca exception: %s' %(e)
