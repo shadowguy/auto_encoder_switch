@@ -79,8 +79,9 @@ if __name__ == '__main__':
     dmovpv.monitor(evtmask, ctrl=False)
     encoderpv.connect(1.0)
     pyca.flush_io()
-#  Put to encoder PV to turn it on
+#  Put to encoder PV to turn it on, wait briefly
     encoderpv.put('1', 2.0)
+    self.__sem.wait(50)
 #  Put to motor tweak PV
     motorpv.put('1', 2.0)
     dmovpv.wait_for_done()
