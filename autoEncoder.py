@@ -62,7 +62,6 @@ if __name__ == '__main__':
   motor_prefix = args.motor
   encoderpv = Pv(args.encoder)
   evtmask = pyca.DBE_VALUE | pyca.DBE_LOG | pyca.DBE_ALARM 
-  print args
   try:
     "SETTING TWEAK PV"
     if args.move_direction == '+':
