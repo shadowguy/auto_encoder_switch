@@ -9,6 +9,7 @@ import sys
 import time
 import random
 import threading
+from numbers import Number
 
 import argparse
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='pnCCD encoder automation, will turn encoder on, move motor in specified direction and turn back off again')
   parser.add_argument('motor', metavar='motor', help='PV of motor name')
   parser.add_argument('encoder', metavar='encoder', help='PV of encoder')
-  parser.add_argument('move_direction', metavar='move_direction', help='+ for positive move, - for negative')
+  parser.add_argument('move_direction', metavar='move_direction', help='+ moves positive, - negative, or number for absolute position')
   try:
       args=parser.parse_args()
   except:
@@ -70,6 +71,9 @@ if __name__ == '__main__':
     elif args.move_direction == '-':
 	print "Negative tweak"
     	motorpv = Pv(motor_prefix + '.TWR')
+    elif isinstance(args.move_direction, Number):
+	print "Absolute move to %d" % args.move_direction
+	motorpv = Pv(motor_prefix)
     else:
         sys.exit("Check options, no direction found!")
 # Connect motor, proc, dmov and encoder PVs - proc needed to tell IOC encoder is on
@@ -87,8 +91,11 @@ if __name__ == '__main__':
 #  Tell IOC to update status
     motor_statpv.put(1, 2.0)
     time.sleep(0.5)
-#  Put to motor tweak PV
-    motorpv.put(1, 2.0)
+#  Put to motor VAL for abs. move or tweak PV
+    if isinstance(args.move_direction, Number):
+	motorpv.put(args.move_direction, 2.0)
+    else:
+    	motorpv.put(1, 2.0)
     dmovpv.wait_for_done()
 #  Once motor is done moving, turn encoder back off!
     encoderpv.put('0', 2.0)
