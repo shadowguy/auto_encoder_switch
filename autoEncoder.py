@@ -2,6 +2,8 @@
 # Scott Stubbs - code to allow pnCCD encoders to turn on and off automatically.
 # Based on SXR scanning scripts by A. Mitra et al.
 
+from __future__ import (absolute_import, division, print_function)
+
 import pyca
 from Pv import Pv
 
@@ -28,7 +30,7 @@ class donemoving(Pv):
         if self.value == 0:
           moving = True
       else:
-        print 'timedout while waiting for moving'
+        print('timedout while waiting for moving')
         break
     while moving:
       self.__sem.wait(1500)
@@ -37,18 +39,18 @@ class donemoving(Pv):
         if self.value == 1:
           moving = False
       else:
-        print 'timedout while waiting for done'
+        print('timedout while waiting for done')
         break
 
   def monitor_handler(self, exception=None):
     try:
       if exception is None:
-        print 'pv %s is %d' %(self.name, self.value)
+        print('pv %s is %d' %(self.name, self.value))
         self.__sem.set()
       else:
-        print "%-30s " %(self.name), exception
-    except Exception, e:
-      print e
+        print("%-30s " %(self.name), exception)
+    except Exception as e:
+      print(e)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='pnCCD encoder automation, will turn encoder on, move motor in specified direction and turn back off again')
@@ -66,14 +68,14 @@ if __name__ == '__main__':
   try:
     "SETTING TWEAK PV"
     if args.move_direction == '+':
-	print "Positive tweak"
-    	motorpv = Pv(motor_prefix + '.TWF')
+        print("Positive tweak")
+        motorpv = Pv(motor_prefix + '.TWF')
     elif args.move_direction == '-':
-	print "Negative tweak"
-    	motorpv = Pv(motor_prefix + '.TWR')
+        print("Negative tweak")
+        motorpv = Pv(motor_prefix + '.TWR')
     elif isinstance(args.move_direction, Number):
-	print "Move to %d" % args.move_direction
-	motorpv = Pv(motor_prefix)
+        print("Move to %d" % args.move_direction)
+        motorpv = Pv(motor_prefix)
     else:
         sys.exit("Check options, no direction/position found!")
 # Connect motor, proc, dmov and encoder PVs - proc needed to tell IOC encoder is on
@@ -93,26 +95,26 @@ if __name__ == '__main__':
     time.sleep(0.5)
 #  Put to motor VAL for specific position or tweak PV
     if isinstance(args.move_direction, Number):
-	motorpv.put(args.move_direction, 2.0)
+        motorpv.put(args.move_direction, 2.0)
     else:
-    	motorpv.put(1, 2.0)
+        motorpv.put(1, 2.0)
     dmovpv.wait_for_done()
 #  Once motor is done moving, turn encoder back off!
     encoderpv.put('0', 2.0)
 # Verify
     encoderpv.get(False, 1.0) # Don't need control values
     if encoderpv.value == 0:
-        print "Encoder off!"
+        print("Encoder off!")
     else:
-        print "Encoder may not be off. Try manually."
+        print("Encoder may not be off. Try manually.")
 # Cleanup
     dmovpv.disconnect()
     motorpv.disconnect()
     encoderpv.disconnect()
     motor_statpv.disconnect()
 
-  except pyca.pyexc, e:
-      print 'pyca exception: %s' %(e)
-  except pyca.caexc, e:
-      print 'channel access exception: %s' %(e)
+  except pyca.pyexc as e:
+      print('pyca exception: %s' %(e))
+  except pyca.caexc as e:
+      print('channel access exception: %s' %(e))
 
